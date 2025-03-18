@@ -52,3 +52,4 @@ jobs:
         files: mpv-macos-arm64.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
