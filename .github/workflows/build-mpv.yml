@@ -1,0 +1,47 @@
+name: Build mpv for macOS ARM
+
+on:
+  push:
+    branches:
+      - main  # 你可以根据需要更改分支名称
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up environment
+      run: |
+        brew update
+        brew install meson ninja pkg-config nasm
+        brew install --build-from-source ffmpeg libass
+
+    - name: Clone mpv repository
+      run: |
+        git clone https://github.com/mpv-player/mpv.git
+        cd mpv
+
+    - name: Configure and build mpv
+      run: |
+        cd mpv
+        meson setup build --prefix=/usr/local --default-library=static --cross-file=cross-arm.txt
+        meson compile -C build
+
+    - name: Package the binary
+      run: |
+        mkdir -p mpv-dist
+        cp build/mpv mpv-dist/
+        tar -czvf mpv-macos-arm64.tar.gz -C mpv-dist .
+
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: mpv-macos-arm64.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
