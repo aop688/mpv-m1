@@ -22,17 +22,17 @@ jobs:
         brew install meson ninja pkg-config nasm
         brew install --build-from-source ffmpeg libass
 
-    - name: Debug directory
-      run: |
-        ls -la
-        ls -la mpv
-
     - name: Clone mpv repository
       run: |
         git clone https://github.com/mpv-player/mpv.git
         cd mpv
         # 将 cross-arm.txt 复制到 mpv 目录
         cp ../cross-arm.txt .
+
+    - name: Debug directory
+      run: |
+        ls -la
+        ls -la mpv
 
     - name: Configure and build mpv
       run: |
