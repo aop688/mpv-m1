@@ -97,16 +97,17 @@ jobs:
         cp mpv/build/mpv mpv-dist/
         tar -czvf mpv-macos-arm64.tar.gz -C mpv-dist .
 
-    - name: Create Git Tag
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git tag v1.1.0  # 替换为你想要的版本号
-        git push https://${{ secrets.PAT }}@github.com/aop688/mpv-m1.git v1.1.0
+      #- name: Create Git Tag
+        #run: |
+        #git config --global user.name "GitHub Actions"
+        #git config --global user.email "actions@github.com"
+        #git tag v1.1.0  # 替换为你想要的版本号
+        #git push https://${{ secrets.PAT }}@github.com/aop688/mpv-m1.git v1.1.0
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
         files: mpv-macos-arm64.tar.gz
+        tag_name: v1.1.0  # 替换为你推送的标签名称
       env:
         GITHUB_TOKEN: ${{ secrets.PAT }}
