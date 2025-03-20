@@ -29,6 +29,13 @@ jobs:
         # 安装 CMake
         brew install cmake
 
+        # 安装 Python 和 glad
+        brew install python@3.13
+        pip3 install glad
+
+        # 设置 PYTHONPATH
+        echo "PYTHONPATH=$(python3 -c 'import site; print(site.getsitepackages()[0])')" >> $GITHUB_ENV
+
         # 克隆并编译 libplacebo
         git clone https://code.videolan.org/videolan/libplacebo.git
         cd libplacebo
