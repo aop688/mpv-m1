@@ -37,9 +37,16 @@ jobs:
         # 在虚拟环境中安装 glad
         pip install glad
 
+        # 验证 glad 是否安装成功
+        python3 -c "import glad; print(glad.__version__)"
+
         # 克隆并编译 libplacebo
         git clone https://code.videolan.org/videolan/libplacebo.git
         cd libplacebo
+
+        # 初始化子模块
+        git submodule update --init
+
         meson setup build --prefix=/usr/local
         meson compile -C build
         meson install -C build
@@ -67,10 +74,11 @@ jobs:
         cd mpv
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
 
-        # 验证 pkg-config 是否能找到 libplacebo
-        pkg-config --exists libplacebo
-        pkg-config --cflags libplacebo
-        pkg-config --libs libplacebo
+        # 设置 PYTHONPATH
+        export PYTHONPATH=$(python3 -c "import site; print(site.getsitepackages()[0])")
+
+        # 验证 glad 是否在 PYTHONPATH 中
+        python3 -c "import glad; print(glad.__version__)"
 
         meson setup build --prefix=/usr/local --default-library=static --cross-file=cross-arm.txt
         meson compile -C build
