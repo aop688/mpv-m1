@@ -47,21 +47,26 @@ jobs:
         # 初始化子模块
         git submodule update --init
 
-        meson setup build --prefix=/usr/local
+        # 设置安装路径为工作目录下的 local 目录
+        export PREFIX="$GITHUB_WORKSPACE/local"
+        mkdir -p "$PREFIX"
+
+        meson setup build --prefix="$PREFIX"
         meson compile -C build
         meson install -C build
         cd ..
 
         # 验证 libplacebo.pc 文件是否存在
-        if [ -f /usr/local/lib/pkgconfig/libplacebo.pc ]; then
+        if [ -f "$PREFIX/lib/pkgconfig/libplacebo.pc" ]; then
           echo "libplacebo.pc found!"
         else
           echo "libplacebo.pc not found!"
           exit 1
         fi
 
-        # 设置 PKG_CONFIG_PATH
-        echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig" >> $GITHUB_ENV
+        # 设置 PKG_CONFIG_PATH 和 LD_LIBRARY_PATH
+        echo "PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$PREFIX/lib" >> $GITHUB_ENV
 
     - name: Clone mpv repository
       run: |
@@ -72,7 +77,8 @@ jobs:
     - name: Configure and build mpv
       run: |
         cd mpv
-        export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
+        export PKG_CONFIG_PATH="$GITHUB_WORKSPACE/local/lib/pkgconfig"
+        export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/local/lib"
 
         # 设置 PYTHONPATH
         export PYTHONPATH=$(python3 -c "import site; print(site.getsitepackages()[0])")
@@ -80,7 +86,7 @@ jobs:
         # 验证 glad 是否在 PYTHONPATH 中
         python3 -c "import glad; print(glad.__version__)"
 
-        meson setup build --prefix=/usr/local --default-library=static --cross-file=cross-arm.txt
+        meson setup build --prefix="$GITHUB_WORKSPACE/local" --default-library=static --cross-file=cross-arm.txt
         meson compile -C build
 
     - name: Package the binary
