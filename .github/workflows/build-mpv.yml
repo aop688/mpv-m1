@@ -22,28 +22,55 @@ jobs:
         brew install meson ninja pkg-config nasm
         brew install --build-from-source ffmpeg libass
 
+        # 安装 libplacebo 依赖
+        brew install vulkan-headers
+        brew install shaderc
+
+        # 安装 CMake
+        brew install cmake
+
+        # 克隆并编译 libplacebo
+        git clone https://code.videolan.org/videolan/libplacebo.git
+        cd libplacebo
+        meson setup build --prefix=/usr/local
+        meson compile -C build
+        meson install -C build
+        cd ..
+
+        # 验证 libplacebo.pc 文件是否存在
+        if [ -f /usr/local/lib/pkgconfig/libplacebo.pc ]; then
+          echo "libplacebo.pc found!"
+        else
+          echo "libplacebo.pc not found!"
+          exit 1
+        fi
+
+        # 设置 PKG_CONFIG_PATH
+        echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig" >> $GITHUB_ENV
+
     - name: Clone mpv repository
       run: |
         git clone https://github.com/mpv-player/mpv.git
-        cd mpv
         # 将 cross-arm.txt 复制到 mpv 目录
-        cp ../cross-arm.txt .
-
-    - name: Debug directory
-      run: |
-        ls -la
-        ls -la mpv
+        cp cross-arm.txt mpv/
 
     - name: Configure and build mpv
       run: |
         cd mpv
+        export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig
+
+        # 验证 pkg-config 是否能找到 libplacebo
+        pkg-config --exists libplacebo
+        pkg-config --cflags libplacebo
+        pkg-config --libs libplacebo
+
         meson setup build --prefix=/usr/local --default-library=static --cross-file=cross-arm.txt
         meson compile -C build
 
     - name: Package the binary
       run: |
         mkdir -p mpv-dist
-        cp build/mpv mpv-dist/
+        cp mpv/build/mpv mpv-dist/
         tar -czvf mpv-macos-arm64.tar.gz -C mpv-dist .
 
     - name: Upload to Release
@@ -52,7 +79,3 @@ jobs:
         files: mpv-macos-arm64.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-
-
